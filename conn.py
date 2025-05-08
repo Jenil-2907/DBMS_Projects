@@ -19,7 +19,7 @@ try:
     mydb = mysql.connector.connect(
         host="202311050-dbms.mysql.database.azure.com",
         user="jenil50",
-        password="Azuredb99.", #ofc this will not work as i have removed sql server from cloud...
+        password="Azuredb99.", #ofc you need to update this credentials as i have removed my db from cloud...
         database="project"
     )
     cursor = mydb.cursor()
