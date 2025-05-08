@@ -176,6 +176,20 @@
     	    <input type="text" name="product_id" placeholder="Enter Product ID">
     	    <button type="submit">Search</button>
     	</form>
+
+        {% elif table_name == 'shipping' %}
+<!-- Option to Join Shipping with Orders Table -->
+<form action="{{ url_for('view_table') }}" method="GET">
+    <input type="hidden" name="table" value="shipping">
+    
+    <label for="join_with_orders">Include Customer Name:</label>
+    <select name="join_with_orders">
+        <option value="no">No</option>
+        <option value="yes">Yes</option>
+    </select>
+
+    <button type="submit">Apply</button>
+</form>
 	{% endif %}
     </div>
     
