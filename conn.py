@@ -15,10 +15,11 @@ users = {
 
 # Database Connection
 try:
+    cursor = None
     mydb = mysql.connector.connect(
         host="202311050-dbms.mysql.database.azure.com",
         user="jenil50",
-        password="Azuredb99.",
+        password="Azuredb99.", #ofc this will not work as i have removed sql server from cloud...
         database="project"
     )
     cursor = mydb.cursor()
@@ -86,37 +87,49 @@ def view_table():
         
         elif table_name == 'Orders' and request.args.get('order_date'):
             order_date = request.args.get('order_date')
-            order_ID  = request.args.get('product_id')
-    
-            # Get daily turnover using GROUP BY
-            turnover_query = f"""
-                SELECT DATE(order_date) as date, SUM(sale_price) as daily_turnover 
-                FROM {table_name} 
+            order_ID = request.args.get('product_id')
+
+            try:
+                datetime.strptime(order_date, '%Y-%m-%d')  # Validate Date Format
+            except ValueError:
+                flash("Invalid date format.", "error")
+                return redirect(url_for('view_table', table=table_name))
+
+            # Get daily turnover
+            turnover_query = """
+                SELECT DATE(order_date) as date, COALESCE(SUM(sale_price), 0) as daily_turnover 
+                FROM Orders 
                 WHERE DATE(order_date) = %s 
                 GROUP BY DATE(order_date)
             """
             cursor.execute(turnover_query, (order_date,))
-    
             turnover_result = cursor.fetchone()
             turnover_value = turnover_result[1] if turnover_result else 0
-    
-            # Get order details for the selected date
-            cursor.execute(f"SELECT * FROM {table_name} WHERE DATE(order_date) = %s", (order_date,))
+
+            # Get all orders for that date
+            cursor.execute("SELECT * FROM Orders WHERE DATE(order_date) = %s", (order_date,))
             data = cursor.fetchall()
-            column_names = [i[0] for i in cursor.description]
-    
+            column_names = [i[0] for i in cursor.description] if cursor.description else []
+
+            # Handle product_id filter separately
+            product_data = []
+            if order_ID:
+                Id_query = "SELECT * FROM Orders WHERE product_id = %s"
+                cursor.execute(Id_query, (order_ID,))
+                product_data = cursor.fetchall()
+
+            if not data:
+                data = []  # Ensure 'data' is iterable
+
             filter_applied = f"Showing orders for date: {order_date} | Daily Turnover: ${turnover_value}"
-            
-            Id_query = f"SELECT * FROM {table_name} WHERE product_id = %s"
-            cursor.execute(Id_query,(order_ID,))
-            data = cursor.fetchone()
-            
-            
-            return render_template('inventory.html', table_name=table_name, data=data, 
-                                  column_names=column_names, filter_applied=filter_applied)
-                                  
-                                                       
-                                  
+
+            return render_template(
+                'inventory.html',
+                table_name=table_name,
+                data=data,
+                column_names=column_names,
+                filter_applied=filter_applied
+            )
         
         elif table_name == 'Offers':
             # Build query dynamically based on provided filters
@@ -131,7 +144,7 @@ def view_table():
                 try:
                     discount_min = float(discount_min) / 100
                     discount_max = float(discount_max) / 100
-                    query += " AND discount_percentage BETWEEN %s AND %s"
+                    query += " AND Offer BETWEEN %s AND %s"
                     params.extend([discount_min, discount_max])
                     filter_description.append(f"discount between {discount_min * 100}% and {discount_max * 100}%")
                 except ValueError:
@@ -211,17 +224,39 @@ def view_table():
             return render_template('inventory.html', table_name=table_name, data=data, 
                                   column_names=column_names, filter_applied=filter_applied)
         
-        else:
-            # Default view with no filters
-            cursor.execute(f"SELECT * FROM {table_name}")
+        elif table_name == 'shipping':
+            # Check if the user wants to join with Orders table
+            join_with_orders = request.args.get('join_with_orders') == 'yes'
+
+            if join_with_orders:
+                query = """
+                    SELECT s.shipping_id, s.Order_id, s.Address, s.dis_date, s.Order_date, o.customer_name 
+                    FROM shipping s
+                    JOIN Orders o ON s.Order_id = o.Order_id
+                """
+                filter_applied = "Showing shipping details with customer names"
+            else:
+                query = "SELECT * FROM shipping"
+                filter_applied = "Showing shipping details without customer names"
+
+            cursor.execute(query)
             data = cursor.fetchall()
             column_names = [i[0] for i in cursor.description]
-            return render_template('inventory.html', table_name=table_name, data=data, column_names=column_names)
+
+            return render_template('inventory.html', table_name=table_name, data=data, 
+                                   column_names=column_names, filter_applied=filter_applied)
+
+        # Default view with no filters
+        cursor.execute(f"SELECT * FROM {table_name}")
+        data = cursor.fetchall()
+        column_names = [i[0] for i in cursor.description]
+        return render_template('inventory.html', table_name=table_name, data=data, column_names=column_names)
     
     except Error as e:
         error_message = f"Database error: {str(e)}"
         flash(error_message, "error")
         return render_template('index.html', role=session['role'], tables=allowed_tables)
+
 # ======== ADD DATA (Admin Only) ========
 @app.route('/add_data', methods=['GET'])
 def add_data():
