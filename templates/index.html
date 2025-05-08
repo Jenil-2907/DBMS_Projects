@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Retail Management</title>
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='first.css') }}">
+    <style>
+        .flash-messages {
+            width: 80%;
+            margin: 10px auto;
+        }
+        .alert {
+            padding: 10px;
+            margin-bottom: 10px;
+            border-radius: 5px;
+        }
+        .alert-error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .alert-success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .alert-warning {
+            background-color: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeeba;
+        }
+    </style>
+</head>
+<body>
+    <h1>Retail Management System</h1>
+    
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        <div class="flash-messages">
+          {% for category, message in messages %}
+            <div class="alert alert-{{ category }}">
+              {{ message }}
+            </div>
+          {% endfor %}
+        </div>
+      {% endif %}
+    {% endwith %}
+    
+    <h2>View Table Data</h2>
+    <form action="{{ url_for('view_table') }}" method="GET">
+        <label for="view_table">Select Table:</label>
+        <select name="table" id="view_table" onchange="this.form.submit()">
+            <option value="" disabled selected>-- Select Table --</option>
+            <option value="Inventory">Inventory</option>
+            <option value="supplier">Supplier</option>
+            <option value="Offers">Offers</option>
+            <option value="EMPLOYEE">Employee</option>
+            <option value="Orders">Orders</option>
+            <option value="Custormer">Customer</option>
+            <option value="shipping">Shipping</option>
+            <option value="rack">Rack</option>
+        </select>
+    </form>
+    <br>
+    
+    {% if session['role'] == 'admin' %}
+    <h2>Add Data to a Table</h2>
+    <form action="{{ url_for('add_data') }}" method="GET">
+        <label for="add_table">Select Table:</label>
+        <select name="table" id="add_table" onchange="this.form.submit()">
+            <option value="" disabled selected>-- Select Table --</option>
+            <option value="Inventory">Inventory</option>
+            <option value="supplier">Supplier</option>
+            <option value="Offers">Offers</option>
+            <option value="EMPLOYEE">Employee</option>
+            <option value="Orders">Orders</option>
+            <option value="rack">Rack</option>
+        </select>
+    </form>
+    
+    <h2>Delete Data from a Table</h2>
+    <form action="{{ url_for('delete') }}" method="GET">
+        <label for="delete_table">Select Table:</label>
+        <select name="table" id="delete_table" onchange="this.form.submit()">
+            <option value="" disabled selected>-- Select Table --</option>
+            <option value="Inventory">Inventory</option>
+            <option value="supplier">Supplier</option>
+            <option value="Offers">Offers</option>
+            <option value="EMPLOYEE">Employee</option>
+            <option value="Orders">Orders</option>
+            <option value="Custormer">Customer</option>
+            <option value="shipping">Shipping</option>
+            <option value="rack">Rack</option>
+        </select>
+    </form>
+    {% endif %}
+    
+    <p><a href="{{ url_for('login') }}">Back to Dashboard</a></p>
+</body>
+</html>

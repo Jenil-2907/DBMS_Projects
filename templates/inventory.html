@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ table_name }} Data</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 20px;
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border: 1px solid #ddd;
+        }
+        th {
+            background-color: #007bfb;
+            color: white;
+        }
+        tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+        tr:hover {
+            background-color: #ddd;
+        }
+        .filter-container {
+            margin-top: 20px;
+            padding: 15px;
+            background: white;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            border-radius: 5px;
+        }
+        .filter-container form {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .filter-container label {
+            font-weight: bold;
+        }
+        .filter-container input, .filter-container button {
+            padding: 8px;
+        }
+        a {
+            display: inline-block;
+            margin-top: 20px;
+            padding: 10px 15px;
+            background-color: #007bfb;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            text-align: center;
+        }
+        a:hover {
+            background-color: #008bfb;
+        }
+        .filter-result {
+            margin: 20px 0;
+            padding: 10px;
+            background-color: #e7f7ff;
+            border-left: 5px solid #007bfb;
+            font-weight: bold;
+        }
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        .clear-filter {
+            background-color: #f44336;
+        }
+        .clear-filter:hover {
+            background-color: #d32f2f;
+        }
+    </style>
+</head>
+<body>
+    <h1>Showing Data for: {{ table_name }}</h1>
+    
+    <!-- Filter Result Banner (if any) -->
+    {% if filter_applied %}
+    <div class="filter-result">
+        {{ filter_applied }}
+    </div>
+    {% endif %}
+    
+    <!-- Full Table Data -->
+    <table>
+        <tr>
+            {% for col in column_names %}
+                <th>{{ col }}</th> 
+            {% endfor %}
+        </tr>
+        {% for row in data %}
+        <tr>
+            {% for value in row %}
+                <td>{{ value }}</td>  
+            {% endfor %}
+        </tr>
+        {% endfor %}
+    </table>
+    
+    <!-- Filter Options (Below the Table) -->
+    <div class="filter-container">
+        <h2>Filter Options</h2>
+        {% if table_name == 'EMPLOYEE' %}
+            <form action="{{ url_for('view_table') }}" method="GET">
+                <input type="hidden" name="table" value="EMPLOYEE">
+                <label>Salary Range:</label>
+                <input type="number" name="salary_min" placeholder="Min Salary" required>
+                <input type="number" name="salary_max" placeholder="Max Salary" required>
+                <button type="submit">Filter</button>
+            </form>
+            
+        {% elif table_name == 'Orders' %}
+            <form action="{{ url_for('view_table') }}" method="GET">
+                <input type="hidden" name="table" value="Orders">
+                <label>Turnover on Date:</label>
+                <input type="date" name="order_date">
+                <button type="submit">Get Turnover</button>
+                
+            <input type="hidden" name="table" value="Orders">
+            <label for="product_id">Filter by Product ID:</label>
+            <input type="text" name="product_id" placeholder="Enter Product ID">
+            <button type="submit">Filter</button>
+            </form>
+            
+        {% elif table_name == 'Offers' %}
+        <!-- Filter by Discount Range -->
+        <form action="{{ url_for('view_table') }}" method="GET">
+            <input type="hidden" name="table" value="Offers">
+            <label for="discount">Filter by Discount Percentage:</label>
+            <input type="number" name="discount_min" placeholder="Min Discount %">
+            <input type="number" name="discount_max" placeholder="Max Discount %">
+
+        <!-- Filter by Product ID -->
+            <input type="hidden" name="table" value="Offers">
+            <label for="product_id">Filter by Product ID:</label>
+            <input type="text" name="product_id" placeholder="Enter Product ID">
+            <button type="submit">Filter</button>
+        </form>
+        
+	{% elif table_name == 'Inventory' %}
+    	<!-- Quantity Filter -->
+    	<form action="{{ url_for('view_table') }}" method="GET">
+    	    <input type="hidden" name="table" value="Inventory">
+        
+    	    <label for="quantity_filter_type">Quantity Filter:</label>
+    	    <select name="quantity_filter_type">
+    	        <option value="more">More than or equal to</option>
+    	        <option value="less">Less than or equal to</option>
+    	    </select>
+	
+    	    <input type="number" name="quantity_value" placeholder="Enter Quantity" required>
+    	    <button type="submit">Apply Filter</button>
+    	</form>
+
+    	<!-- Product ID Filter -->
+    	<form action="{{ url_for('view_table') }}" method="GET">
+    	    <input type="hidden" name="table" value="Inventory">
+    	    
+    	    <label for="product_id">Search by Product ID:</label>
+    	    <input type="text" name="product_id" placeholder="Enter Product ID">
+    	    <button type="submit">Search</button>
+    	</form>
+	{% endif %}
+    </div>
+    
+    <div class="action-buttons">
+        <!-- Clear Filter Button -->
+        {% if filter_applied %}
+        <a href="{{ url_for('view_table', table=table_name) }}" class="clear-filter">Clear Filter</a>
+        {% endif %}
+        <!-- Back Button -->
+        <a href="{{ url_for('dashboard') }}">Back to Dashboard</a>
+    </div>
+
