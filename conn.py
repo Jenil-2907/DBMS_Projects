@@ -16,9 +16,9 @@ users = {
 # Database Connection
 try:
     mydb = mysql.connector.connect(
-        host="localhost",
-        user="jenil-202311050",
-        password="RDBMS50",
+        host="202311050-dbms.mysql.database.azure.com",
+        user="jenil50",
+        password="Azuredb99.",
         database="project"
     )
     cursor = mydb.cursor()
